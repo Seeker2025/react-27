@@ -1,21 +1,28 @@
 import { useState } from 'react'
+import './App.css'
 // import heroImg from './assets/hero.png'
 // import reactLogo from './assets/react.svg'
 // import viteLogo from './assets/vite.svg'
 import { StartReact } from './StartReact/StartReact'
-import './App.css'
+import { Context } from './Context/'
+import { Alert } from './Alert/'
+import { Main  }  from './Main/'
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  // const [count, setCount] = useState(0)
 
   return (
-    <>
-      <section id="center">
+                  <Context>
+                    <section id="center">
+                                            
+                                            <StartReact/>
 
-                              <StartReact/>
-       
-      </section>
-    </>
+                                            <Main/>
+
+                                            <Alert/>
+                    
+                    </section>
+                  </Context>
   )
 }
 

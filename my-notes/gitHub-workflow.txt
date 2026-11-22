@@ -1,0 +1,110 @@
+Да, всё верно. Новый проект Vite + React сам по себе не содержит файл .github/workflows/deploy.yml.
+Его нужно создать вручную, как мы делали в предыдущем проекте react-26.
+
+Давай настроим автоматическую публикацию react-27 на GitHub Pages через GitHub Actions.
+Шаг 1. Проверь vite.config.js
+Открой файл vite.config.js в корне проекта и убедись, что в нём указан правильный base:
+
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  base: '/react-27/',
+})
+
+
+
+Это важно: GitHub Pages будет размещать сайт по адресу /react-27/, а не в корне домена.
+Шаг 2. Создай папки и файл deploy.yml
+В Git Bash, находясь в папке react-27, выполни:
+mkdir -p .github/workflows
+
+
+Теперь создай файл и запиши в него настройки публикации:
+cat > .github/workflows/deploy.yml <<'EOF'
+name: Deploy React App to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
+EOF
+
+
+Шаг 3. Проверь созданный файл
+cat .github/workflows/deploy.yml
+
+
+Убедись, что содержимое совпадает с приведённым выше.
+Шаг 4. Добавь файл в Git
+Выполни три команды:
+git add .github/workflows/deploy.yml
+git commit -m "Add GitHub Pages deployment workflow"
+git push origin main
+
+
+После git push GitHub должен автоматически запустить публикацию.
+Шаг 5. Проверь настройки GitHub
+Открой репозиторий react-27:
+1. Перейди в Settings → Pages.
+2. Найди раздел Build and deployment.
+3. В поле Source выбери GitHub Actions.
+Затем открой вкладку Actions и проверь выполнение Deploy React App to GitHub Pages.
+Ожидаемый результат
+Сайт будет доступен по адресу:
+
+https://seeker2025.github.io/react-27/
+
+Официальная инструкция: Vite — Deploying a Static Site.
+
+Предлагаю идти по шагам: сначала создай файл и выполни команду cat .github/workflows/deploy.yml.
+Пришли мне результат — проверим его перед отправкой на GitHub.
