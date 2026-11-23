@@ -1,0 +1,423 @@
+Давай разберём этот код построчно.
+import { createContext } from 'react';
+
+export const Context = createContext();
+
+
+Здесь мы создаём контекст React и экспортируем его, чтобы другие компоненты могли его использовать.
+1. import { createContext } from 'react';
+Импортируем функцию createContext из библиотеки React.
+
+createContext — это специальная функция React, которая позволяет создать контекст.
+
+Контекст нужен для того, чтобы передавать данные между компонентами без необходимости передавать их
+через props на каждом уровне вложенности.
+
+Например, если у нас есть такая структура:
+App
+
+Хранит общие данные
+
+Main
+
+Profile
+
+Получает данные из Context
+
+
+Компонент Profile может получить данные непосредственно из контекста, даже если Main их не использует
+и не передаёт дальше.
+2. export const Context = createContext();
+Разберём эту строку:
+- const Context — создаём переменную с именем Context.
+- createContext() — вызываем функцию, которая создаёт объект контекста.
+- export — делаем этот объект доступным для импорта в других модулях.
+Почему мы не передаём аргументы в createContext()?
+
+Функция может принимать начальное значение (значение по умолчанию). Если его не указать,
+оно будет undefined.
+
+Например:
+export const Context = createContext('Привет');
+
+
+Теперь 'Привет' будет значением контекста по умолчанию, если компонент не получит значение от
+соответствующего Provider.
+3. Как использовать созданный Context?
+В компоненте App мы можем использовать Provider, чтобы предоставить данные другим компонентам:
+import { Context } from './Context';
+
+function App() {
+  return (
+    <Context.Provider value="Привет из Context">
+      <Main />
+    </Context.Provider>
+  );
+}
+
+
+А в компоненте Main получить эти данные:
+import { useContext } from 'react';
+import { Context } from './Context';
+
+function Main() {
+  const value = useContext(Context);
+
+  return <h1>{value}</h1>;
+}
+
+
+На странице появится:
+Привет из Context
+
+Главное: createContext() создаёт сам объект контекста. Он ещё не содержит переданных приложением
+данных. Данные передаются через Provider, а читаются с помощью useContext().
+Именно поэтому мы обычно выносим создание контекста в отдельный файл: тогда любой компонент может
+импортировать один и тот же объект Context.
+
+Значение из Provider имеет приоритет над значением по умолчанию.
+
+Расскажи про 
+Context.Provider
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Context.Provider в React
+Context.Provider — это компонент React, который предоставляет значение контекста дочерним компонентам.
+
+Проще говоря, с помощью Provider мы передаём данные компонентам, находящимся внутри него, без необходимости передавать их через props.
+
+Давай разберём подробно.
+1. Как выглядит Context.Provider?
+<Context.Provider value={100}>
+  <App />
+</Context.Provider>
+
+
+Здесь:
+- Context — объект контекста, созданный с помощью createContext().
+- Provider — компонент, который предоставляет значение контекста.
+- value={100} — значение, которое мы передаём.
+- <App /> — дочерний компонент, который сможет получить это значение.
+Обрати внимание: value — специальный prop компонента Provider.
+2. Как данные доходят до вложенных компонентов?
+Представим такую структуру:
+Context.Provider
+value = 100
+
+App
+
+Main
+
+Profile
+
+Получает значение 100
+
+
+Компонент Profile может получить значение 100, даже если компоненты App и Main его не получают и не передают дальше.
+3. Полный пример
+Context.jsx
+
+Создаём контекст:
+import { createContext } from 'react';
+
+export const Context = createContext();
+
+
+App.jsx
+
+Предоставляем значение:
+import { Context } from './Context';
+import { Main } from './Main';
+
+export const App = () => {
+  return (
+    <Context.Provider value={100}>
+      <Main />
+    </Context.Provider>
+  );
+};
+
+
+Main.jsx
+
+Получаем значение:
+import { useContext } from 'react';
+import { Context } from './Context';
+
+export const Main = () => {
+  const value = useContext(Context);
+
+  return <h1>{value}</h1>;
+};
+
+
+На странице увидим:
+100
+
+4. Можно ли передавать несколько значений?
+Да! Обычно для этого используют объект.
+<Context.Provider
+  value={{
+    name: 'Alex',
+    age: 30,
+    isOnline: true,
+  }}
+>
+  <Main />
+</Context.Provider>
+
+
+Получаем объект:
+const value = useContext(Context);
+
+console.log(value.name);     // "Alex"
+console.log(value.age);      // 30
+console.log(value.isOnline); // true
+
+
+Можно передавать не только обычные значения, но и функции, например функцию для изменения состояния.
+5. Важная особенность Provider
+Можно создавать несколько Provider одного и того же контекста.
+<Context.Provider value={100}>
+  <Main />
+
+  <Context.Provider value={200}>
+    <Profile />
+  </Context.Provider>
+</Context.Provider>
+
+
+В этом случае:
+- Main получит 100.
+- Profile получит 200.
+Вложенный Provider переопределяет значение для своих потомков.
+
+Что нужно запомнить
+Элемент	Что делает
+createContext()	Создаёт контекст
+Context.Provider	Предоставляет значение
+value	Передаваемые данные
+useContext(Context)	Получает данные
+
+Небольшое упражнение:
+
+Посмотри на код:
+<Context.Provider value={100}>
+  <Main />
+  <Context.Provider value={200}>
+    <Profile />
+  </Context.Provider>
+</Context.Provider>
+
+
+Какое значение получит Profile, если внутри него вызвать:
+const value = useContext(Context);
+
+
+Будет 100 или 200?
+
+будет 200
+Правильно! 👍 Будет 200.
+
+Почему?
+
+Потому что Profile находится внутри вложенного Context.Provider, у которого value={200}.
+
+React использует значение ближайшего Provider выше по дереву компонентов.
+
+<Context.Provider value={100}>
+  <Main />
+
+  <Context.Provider value={200}>
+    <Profile /> {/* Получит 200 */}
+  </Context.Provider>
+</Context.Provider>
+
+А Main, который находится вне вложенного Provider, получит 100.
+
+Запомни правило: useContext() ищет ближайший Provider соответствующего контекста вверх по дереву компонентов.
+
+В твоём коде useCustomContext — это пользовательский React Hook (Custom Hook). Он создан для того, чтобы упростить получение данных из контекста ContextAlert.
+
+Давай разберём его подробно.
+1. Функция useCustomContext
+Твой код:
+export const useCustomContext = () => {
+    return useContext(ContextAlert);
+}
+
+
+Разберём построчно:
+
+export const useCustomContext
+
+Создаём функцию и экспортируем её, чтобы другие компоненты могли импортировать и использовать.
+
+() =>
+
+Это стрелочная функция. Она не принимает аргументов.
+
+return useContext(ContextAlert)
+
+Здесь происходит самое интересное.
+
+Мы вызываем встроенный React Hook useContext() и передаём ему объект контекста ContextAlert.
+
+React возвращает значение, которое передано через:
+<ContextAlert.Provider value={...}>
+
+
+Таким образом, useCustomContext() возвращает значение контекста.
+2. Что именно возвращает useCustomContext() в твоём случае?
+Посмотрим на Provider:
+<ContextAlert.Provider
+    value={{
+        toggleValue: toggleAlert,
+        toggle: setToggleAlert
+    }}
+>
+    {children}
+</ContextAlert.Provider>
+
+
+В value передаётся объект с двумя свойствами:
+Свойство	Что содержит
+toggleValue	Текущее состояние toggleAlert
+toggle	Функцию setToggleAlert, которая изменяет состояние
+
+Поэтому вызов:
+const context = useCustomContext();
+
+
+Вернёт примерно такой объект:
+{
+    toggleValue: false,
+    toggle: setToggleAlert
+}
+
+
+Изначально toggleValue равен false, потому что:
+const [toggleAlert, setToggleAlert] = useState(false);
+
+
+3. Как использовать useCustomContext() в другом компоненте?
+Например, создадим компонент Alert.jsx:
+import { useCustomContext } from './Context';
+
+export const Alert = () => {
+    const { toggleValue, toggle } = useCustomContext();
+
+    return (
+        <div>
+            <p>{toggleValue ? 'Alert открыт' : 'Alert закрыт'}</p>
+
+            <button onClick={() => toggle(!toggleValue)}>
+                Переключить
+            </button>
+        </div>
+    );
+};
+
+
+Обрати внимание на эту строку:
+const { toggleValue, toggle } = useCustomContext();
+
+
+Здесь мы используем деструктуризацию объекта, который возвращает useCustomContext().
+
+То есть это аналогично:
+const context = useCustomContext();
+
+const toggleValue = context.toggleValue;
+const toggle = context.toggle;
+
+
+4. Почему нельзя просто в каждом компоненте писать useContext(ContextAlert)?
+Можно! Но тогда придётся каждый раз импортировать сам ContextAlert и вызывать useContext().
+
+Твой пользовательский Hook позволяет скрыть эту реализацию.
+
+Вместо:
+const { toggleValue, toggle } = useContext(ContextAlert);
+
+
+Пишем:
+const { toggleValue, toggle } = useCustomContext();
+
+
+Получается короче и удобнее.
+5. Важная особенность
+useCustomContext() можно вызывать только внутри React-компонентов или других пользовательских Hooks.
+
+Например, так правильно:
+export const Main = () => {
+    const context = useCustomContext();
+
+    return <div>{context.toggleValue.toString()}</div>;
+};
+
+
+А вот так неправильно:
+const context = useCustomContext(); // Ошибка!
+
+
+Если эта строка находится вне React-компонента или другого Hook.
+
+Также компонент, использующий useCustomContext(), должен находиться внутри соответствующего ContextAlert.Provider, иначе получит значение по умолчанию — undefined.
+
+Проверим понимание
+Посмотри на этот код:
+const [toggleAlert, setToggleAlert] = useState(false);
+
+<ContextAlert.Provider
+    value={{
+        toggleValue: toggleAlert,
+        toggle: setToggleAlert
+    }}
+>
+    {children}
+</ContextAlert.Provider>
+
+
+Если в компоненте написать:
+const { toggleValue, toggle } = useCustomContext();
+
+
+Что будет храниться в переменной toggle, а что в toggleValue?
+
+Подумай: одна переменная содержит состояние, а другая — функцию для изменения этого состояния.
+
+Совершенно верно! 👍 Ты всё правильно понял.
+
+В твоём примере:
+const [toggleAlert, setToggleAlert] = useState(false);
+
+
+Получаем:
+- toggleValue — текущее значение состояния, изначально false.
+- toggle — функция setToggleAlert, которая позволяет изменить состояние.
+Например:
+const { toggleValue, toggle } = useCustomContext();
+
+toggle(true);
+
+
+Теперь toggleValue станет true, React выполнит повторный рендер компонентов, использующих этот
+контекст, и они получат обновлённое значение.
+
+Небольшое уточнение: toggle — это не метод объекта, а функция обновления состояния, которую
+вернул useState().
+
+Ты правильно разобрался с принципом работы Custom Hook и Context API!
